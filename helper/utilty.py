@@ -114,10 +114,15 @@ def save_image(filename, image, print_console=False):
     directory = os.path.dirname(filename)
     if directory != "" and not os.path.exists(directory):
         os.makedirs(directory)
-
-    image = misc.toimage(image, cmin=0, cmax=255)  # to avoid range rescaling
-    misc.imsave(filename, image)
-
+    
+    try:
+        image = Image.fromarray(image)  # to avoid range rescaling
+        image = image.convert("L")
+        image.save(filename)
+    except:
+        formatted = (image * 255 / np.max(image)).astype('uint8')
+        image = Image.fromarray(formatted)
+        image.save(filename)
     if print_console:
         print("Saved [%s]" % filename)
 
@@ -229,14 +234,14 @@ def resize_image_by_pil(image, scale, resampling_method="bicubic"):
         image = np.asarray(image)
         image = image.reshape(new_height, new_width, 1)
     return image
-
+import imageio
 
 def load_image(filename, width=0, height=0, channels=0, alignment=0, print_console=True):
     if not os.path.isfile(filename):
         raise LoadError("File not found [%s]" % filename)
 
     try:
-        image = np.atleast_3d(misc.imread(filename))
+        image = np.atleast_3d(imageio.imread(filename))
 
         if (width != 0 and image.shape[1] != width) or (height != 0 and image.shape[0] != height):
             raise LoadError("Attributes mismatch")
